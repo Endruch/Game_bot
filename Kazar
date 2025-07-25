@@ -1,0 +1,294 @@
+import ctypes
+import time
+
+SendInput = ctypes.windll.user32.SendInput
+
+# Указатель на дополнительную информацию
+PUL = ctypes.POINTER(ctypes.c_ulong)
+
+
+# Определение структур C для SendInput
+class KeyBdInput(ctypes.Structure):
+    _fields_ = [("wVk", ctypes.c_ushort),
+                ("wScan", ctypes.c_ushort),
+                ("dwFlags", ctypes.c_ulong),
+                ("time", ctypes.c_ulong),
+                ("dwExtraInfo", PUL)]
+
+
+class MouseInput(ctypes.Structure):
+    _fields_ = [("dx", ctypes.c_long),
+                ("dy", ctypes.c_long),
+                ("mouseData", ctypes.c_ulong),
+                ("dwFlags", ctypes.c_ulong),
+                ("time", ctypes.c_ulong),
+                ("dwExtraInfo", PUL)]
+
+
+class HardwareInput(ctypes.Structure):
+    _fields_ = [("uMsg", ctypes.c_ulong),
+                ("wParamL", ctypes.c_short),
+                ("wParamH", ctypes.c_ushort)]
+
+
+class Input_I(ctypes.Union):
+    _fields_ = [("ki", KeyBdInput),
+                ("mi", MouseInput),
+                ("hi", HardwareInput)]
+
+
+class Input(ctypes.Structure):
+    _fields_ = [("type", ctypes.c_ulong),
+                ("ii", Input_I)]
+
+
+# Функции для эмуляции нажатия клавиши
+def PressKey(hexKeyCode):
+    extra = ctypes.c_ulong(0)
+    ii_ = Input_I()
+    ii_.ki = KeyBdInput(0, hexKeyCode, 0x0008, 0, ctypes.pointer(extra))
+    x = Input(ctypes.c_ulong(1), ii_)
+    ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+
+
+def ReleaseKey(hexKeyCode):
+    extra = ctypes.c_ulong(0)
+    ii_ = Input_I()
+    ii_.ki = KeyBdInput(0, hexKeyCode, 0x0008 | 0x0002, 0, ctypes.pointer(extra))
+    x = Input(ctypes.c_ulong(1), ii_)
+    ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+
+
+# Функции для эмуляции действий мыши
+def MoveMouse(x, y):
+    """Перемещение мыши на относительные координаты x, y"""
+    extra = ctypes.c_ulong(0)
+    ii_ = Input_I()
+    ii_.mi = MouseInput(x, y, 0, 0x0001, 0, ctypes.pointer(extra))  # MOUSEEVENTF_MOVE
+    x = Input(ctypes.c_ulong(0), ii_)
+    ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+
+
+def ClickLeftMouse():
+    """Нажатие и отпускание левой кнопки мыши"""
+    extra = ctypes.c_ulong(0)
+
+    # Нажатие
+    ii_ = Input_I()
+    ii_.mi = MouseInput(0, 0, 0, 0x0002, 0, ctypes.pointer(extra))  # MOUSEEVENTF_LEFTDOWN
+    x = Input(ctypes.c_ulong(0), ii_)
+    ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+
+    time.sleep(0.05)  # Небольшая задержка
+
+    # Отпускание
+    ii_ = Input_I()
+    ii_.mi = MouseInput(0, 0, 0, 0x0004, 0, ctypes.pointer(extra))  # MOUSEEVENTF_LEFTUP
+    x = Input(ctypes.c_ulong(0), ii_)
+    ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+
+
+def RightClickMouse():
+    """Нажатие и отпускание правой кнопки мыши"""
+    extra = ctypes.c_ulong(0)
+
+    # Нажатие правой кнопки
+    ii_ = Input_I()
+    ii_.mi = MouseInput(0, 0, 0, 0x0008, 0, ctypes.pointer(extra))  # MOUSEEVENTF_RIGHTDOWN
+    x = Input(ctypes.c_ulong(0), ii_)
+    ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+
+    time.sleep(0.05)  # Небольшая задержка
+
+    # Отпускание правой кнопки
+    ii_ = Input_I()
+    ii_.mi = MouseInput(0, 0, 0, 0x0010, 0, ctypes.pointer(extra))  # MOUSEEVENTF_RIGHTUP
+    x = Input(ctypes.c_ulong(0), ii_)
+    ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+
+
+def ScrollMouse(amount):
+    """Прокрутка колеса мыши (amount > 0 - вверх, amount < 0 - вниз)"""
+    extra = ctypes.c_ulong(0)
+    ii_ = Input_I()
+    ii_.mi = MouseInput(0, 0, amount, 0x0800, 0, ctypes.pointer(extra))  # MOUSEEVENTF_WHEEL
+    x = Input(ctypes.c_ulong(0), ii_)
+    ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+
+
+# Тестовый цикл
+while True:
+#-------------------------------------------kazar
+    PressKey(3)  # Нажатие '2'
+    time.sleep(0.1)
+    ReleaseKey(3)  # Отпускание '2'
+    time.sleep(2)
+
+    #Reapper
+    PressKey(8)  # Нажатие '7'
+    time.sleep(0.1)
+    ReleaseKey(8)  # Отпускание '7'
+    time.sleep(3)
+
+    PressKey(59)  # Нажатие 'F1'
+    time.sleep(0.2)
+    ReleaseKey(59)  # Отпускание 'F1'
+    time.sleep(0.2)
+
+    PressKey(60)  # Нажатие 'F2'
+    time.sleep(0.2)
+    ReleaseKey(60)  # Отпускание 'F2'
+    time.sleep(0.2)
+
+    ClickLeftMouse()
+    time.sleep(0.2)
+
+    PressKey(10)  # Нажатие '9'
+    time.sleep(0.2)
+    ReleaseKey(10)  # Отпускание '9'
+    time.sleep(0.2)
+
+    PressKey(60)  # Нажатие 'H'
+    time.sleep(0.2)
+    ReleaseKey(60)
+    time.sleep(61)
+
+#-------------------------------------------Lantanode
+    PressKey(4)  # Нажатие '2'
+    time.sleep(0.1)
+    ReleaseKey(4)  # Отпускание '2'
+    time.sleep(2)
+
+    #Reapper
+    PressKey(8)  # Нажатие '7'
+    time.sleep(0.1)
+    ReleaseKey(8)  # Отпускание '7'
+    time.sleep(3)
+
+    PressKey(59)  # Нажатие 'F1'
+    time.sleep(0.2)
+    ReleaseKey(59)  # Отпускание 'F1'
+    time.sleep(0.2)
+
+    PressKey(60)  # Нажатие 'F2'
+    time.sleep(0.2)
+    ReleaseKey(60)  # Отпускание 'F2'
+    time.sleep(0.2)
+
+    ClickLeftMouse()
+    time.sleep(0.2)
+
+    PressKey(10)  # Нажатие '9'
+    time.sleep(0.2)
+    ReleaseKey(10)  # Отпускание '9'
+    time.sleep(0.2)
+
+    PressKey(60)  # Нажатие 'H'
+    time.sleep(0.2)
+    ReleaseKey(60)
+    time.sleep(61)
+
+#-------------------------------------------Ennon
+    PressKey(5)  # Нажатие '4'
+    time.sleep(0.1)
+    ReleaseKey(5)  # Отпускание '4'
+    time.sleep(3)
+
+    #Reapper
+    PressKey(8)  # Нажатие '7'
+    time.sleep(0.1)
+    ReleaseKey(8)  # Отпускание '7'
+    time.sleep(3)
+
+    PressKey(59)  # Нажатие 'F1'
+    time.sleep(0.2)
+    ReleaseKey(59)  # Отпускание 'F1'
+    time.sleep(0.2)
+
+    PressKey(60)  # Нажатие 'F2'
+    time.sleep(0.2)
+    ReleaseKey(60)  # Отпускание 'F2'
+    time.sleep(0.2)
+
+    ClickLeftMouse()
+    time.sleep(0.2)
+
+    PressKey(10)  # Нажатие '9'
+    time.sleep(0.2)
+    ReleaseKey(10)  # Отпускание '9'
+    time.sleep(0.2)
+
+    PressKey(60)  # Нажатие 'H'
+    time.sleep(0.2)
+    ReleaseKey(60)
+    time.sleep(61)
+
+#-------------------------------------------Nakstech
+    PressKey(6)  # Нажатие '5'
+    time.sleep(0.1)
+    ReleaseKey(6)  # Отпускание '5'
+    time.sleep(2)
+
+    #Reapper
+    PressKey(8)  # Нажатие '7'
+    time.sleep(0.1)
+    ReleaseKey(8)  # Отпускание '7'
+    time.sleep(3)
+
+    PressKey(59)  # Нажатие 'F1'
+    time.sleep(0.2)
+    ReleaseKey(59)  # Отпускание 'F1'
+    time.sleep(0.2)
+
+    PressKey(60)  # Нажатие 'F2'
+    time.sleep(0.2)
+    ReleaseKey(60)  # Отпускание 'F2'
+    time.sleep(0.2)
+
+    ClickLeftMouse()
+    time.sleep(0.2)
+
+    PressKey(10)  # Нажатие '9'
+    time.sleep(0.2)
+    ReleaseKey(10)  # Отпускание '9'
+    time.sleep(0.2)
+
+    PressKey(60)  # Нажатие 'H'
+    time.sleep(0.2)
+    ReleaseKey(60)
+    time.sleep(61)
+
+#-------------------------------------------Humbaba
+    PressKey(7)  # Нажатие '6'
+    time.sleep(0.1)
+    ReleaseKey(7)  # Отпускание '6'
+    time.sleep(2)
+
+    #Reapper
+    PressKey(8)  # Нажатие '7'
+    time.sleep(0.1)
+    ReleaseKey(8)  # Отпускание '7'
+    time.sleep(3)
+
+    PressKey(59)  # Нажатие 'F1'
+    time.sleep(0.2)
+    ReleaseKey(59)  # Отпускание 'F1'
+    time.sleep(0.2)
+
+    PressKey(60)  # Нажатие 'F2'
+    time.sleep(0.2)
+    ReleaseKey(60)  # Отпускание 'F2'
+    time.sleep(0.2)
+
+    ClickLeftMouse()
+    time.sleep(0.2)
+
+    PressKey(10)  # Нажатие '9'
+    time.sleep(0.2)
+    ReleaseKey(10)  # Отпускание '9'
+    time.sleep(0.2)
+
+    PressKey(60)  # Нажатие 'H'
+    time.sleep(0.2)
+    ReleaseKey(60)
+    time.sleep(61)
